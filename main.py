@@ -15,17 +15,21 @@
 #     at 0.01. Per-market, so a quiet market forecasts narrow and a jumpy
 #     one forecasts wide. RMS over a long window was much worse; over a
 #     short window (120 min) it tracks the current regime.
-#   - Growth: spread(h) = sigma * h**0.3 for h = 1..240. The 0.3 exponent
+#   - Growth: spread(h) = sigma * h**0.35 for h = 1..240. The 0.35 exponent
 #     (not the random-walk 0.5) fits because most minutes are flat and the
 #     moves that do happen are jumps: uncertainty grows slower than sqrt(h).
-#   - Tails: the outer z pair is widened x1.6 (z = [-1.644854*1.6,
-#     -0.674490, 0, 0.674490, 1.644854*1.6]). Jump risk is heavy-tailed, so
+#     A sweep over window x exponent x outer-multiplier on the practice
+#     picked 120 min / 0.35 / 1.3 as the best parametric fan (0.266866);
+#     EWMA vol, Laplace/Student-t fans, jump-gating, asymmetry, reversion
+#     drift, and pooled empirical quantiles were all tried and all worse.
+#   - Tails: the outer z pair is widened x1.3 (z = [-1.644854*1.3,
+#     -0.674490, 0, 0.674490, 1.644854*1.3]). Jump risk is heavy-tailed, so
 #     the 5% / 95% quantiles need to sit further out than a normal would.
 #   - Quantiles are clamped to [0, 1], rounded to 6 decimals, and forced
 #     non-decreasing within each row.
 #
 # Practice score (local scorer, verified to reproduce the house baseline
-# exactly at 0.363589): this forecaster 0.267107, beating the baseline on
+# exactly at 0.363589): this forecaster 0.266866, beating the baseline on
 # all 6 practice cases. The gain is spread calibration: median error is
 # identical to the baseline's, all of it comes from better quantile widths.
 # (Output size note: 4 markets x 240 rows x 5 quantiles stays far under the
@@ -40,11 +44,11 @@ import os
 
 QUANTILES = [0.05, 0.25, 0.5, 0.75, 0.95]
 Z = [-1.644854, -0.674490, 0.0, 0.674490, 1.644854]
-Z_OUTER = 1.6
+Z_OUTER = 1.3
 WINDOW_MIN = 120
 SIGMA_FLOOR = 0.0005
 SIGMA_CAP = 0.01
-SPREAD_EXP = 0.3
+SPREAD_EXP = 0.35
 HORIZON = 240
 
 
